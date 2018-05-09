@@ -1,11 +1,13 @@
 {
     "name": "djinorm/djin-criteria",
-    "description": "Djin Criteria for DB-free OOP-style passing search criteria to repository",
+    "description": "Djin Filter-Sort-Paginate abstraction for passing to repository",
     "keywords": [
         "djin",
         "repository",
         "sql",
-        "criteria"
+        "filter",
+        "sort",
+        "paginate"
     ],
     "authors": [
         {
