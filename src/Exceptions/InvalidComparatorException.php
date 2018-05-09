@@ -4,7 +4,7 @@
  * Datetime: 09.05.2018 22:24
  */
 
-namespace DjinORM\Components\Pagination\Exceptions;
+namespace DjinORM\Components\FilterSortPaginate\Exceptions;
 
 
 class InvalidComparatorException extends \Exception

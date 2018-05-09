@@ -4,10 +4,10 @@
  * Datetime: 09.05.2018 22:13
  */
 
-namespace DjinORM\Components\Pagination\Conditions;
+namespace DjinORM\Components\FilterSortPaginate\Filters;
 
 
-class FulltextSearchCondition implements ConditionInterface
+class FulltextSearchFilter implements FilterInterface
 {
 
     /**

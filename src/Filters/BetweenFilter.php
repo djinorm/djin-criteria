@@ -4,10 +4,10 @@
  * Datetime: 09.05.2018 22:10
  */
 
-namespace DjinORM\Components\Pagination\Conditions;
+namespace DjinORM\Components\FilterSortPaginate\Filters;
 
 
-class BetweenCondition implements ConditionInterface
+class BetweenFilter implements FilterInterface
 {
 
     /**

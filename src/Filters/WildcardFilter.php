@@ -4,10 +4,10 @@
  * Datetime: 09.05.2018 22:09
  */
 
-namespace DjinORM\Components\Pagination\Conditions;
+namespace DjinORM\Components\FilterSortPaginate\Filters;
 
 
-class WildcardCondition implements ConditionInterface
+class WildcardFilter implements FilterInterface
 {
 
     /**

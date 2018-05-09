@@ -4,7 +4,7 @@
  * Datetime: 09.05.2018 21:36
  */
 
-namespace DjinORM\Components\Pagination;
+namespace DjinORM\Components\FilterSortPaginate;
 
 
 class Sort

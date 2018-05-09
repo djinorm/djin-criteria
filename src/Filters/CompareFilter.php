@@ -7,10 +7,10 @@
 namespace DjinORM\Components\Criteria\Conditions;
 
 
-use DjinORM\Components\Pagination\Conditions\ConditionInterface;
-use DjinORM\Components\Pagination\Exceptions\InvalidComparatorException;
+use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
+use DjinORM\Components\FilterSortPaginate\Exceptions\InvalidComparatorException;
 
-class CompareCondition implements ConditionInterface
+class CompareFilter implements FilterInterface
 {
 
     const EQUALS = '=';

@@ -7,10 +7,10 @@
 namespace DjinORM\Repositories\Sql;
 
 
-use DjinORM\Components\Pagination\Conditions\ConditionInterface;
-use DjinORM\Components\Pagination\Sort;
+use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
+use DjinORM\Components\FilterSortPaginate\Sort;
 
-class Pagination
+class FSP
 {
 
     /**
@@ -26,16 +26,16 @@ class Pagination
      */
     protected $sort;
     /**
-     * @var ConditionInterface[]
+     * @var FilterInterface[]
      */
-    protected $conditions;
+    protected $filters;
 
-    public function __construct(int $pageNumber = 1, int $pageSize = 20, Sort $sort = null, array $conditions = [])
+    public function __construct(int $pageNumber = 1, int $pageSize = 20, Sort $sort = null, array $filters = [])
     {
         $this->pageNumber = $pageNumber;
         $this->pageSize = $pageSize;
         $this->sort = $sort ?? new Sort();
-        $this->conditions = $conditions;
+        $this->filters = $filters;
     }
 
     /**
@@ -48,38 +48,38 @@ class Pagination
 
     /**
      * @param Sort $sort
-     * @return Pagination
+     * @return FSP
      */
-    public function setSort(Sort $sort): Pagination
+    public function setSort(Sort $sort): FSP
     {
         $this->sort = $sort;
         return $this;
     }
 
     /**
-     * @return ConditionInterface[]
+     * @return FilterInterface[]
      */
-    public function getConditions(): array
+    public function getFilters(): array
     {
-        return $this->conditions;
+        return $this->filters;
     }
 
     /**
-     * @param ConditionInterface $condition
-     * @return Pagination
+     * @param FilterInterface $condition
+     * @return FSP
      */
-    public function addCondition(ConditionInterface $condition): self
+    public function addFilter(FilterInterface $condition): self
     {
-        $this->conditions[] = $condition;
+        $this->filters[] = $condition;
         return $this;
     }
 
     /**
-     * @return Pagination
+     * @return FSP
      */
-    public function clearConditions(): self
+    public function clearFilters(): self
     {
-        $this->conditions = [];
+        $this->filters = [];
         return $this;
     }
 
@@ -93,9 +93,9 @@ class Pagination
 
     /**
      * @param int $pageNumber
-     * @return Pagination
+     * @return FSP
      */
-    public function setPageNumber(int $pageNumber): Pagination
+    public function setPageNumber(int $pageNumber): FSP
     {
         $this->pageNumber = $pageNumber;
         return $this;
@@ -111,9 +111,9 @@ class Pagination
 
     /**
      * @param int $pageSize
-     * @return Pagination
+     * @return FSP
      */
-    public function setPageSize(int $pageSize): Pagination
+    public function setPageSize(int $pageSize): FSP
     {
         $this->pageSize = $pageSize;
         return $this;

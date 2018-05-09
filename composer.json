@@ -1,10 +1,8 @@
 {
-    "name": "djinorm/djin-criteria",
+    "name": "djinorm/djin-filter-sort-paginate",
     "description": "Djin Filter-Sort-Paginate abstraction for passing to repository",
     "keywords": [
         "djin",
-        "repository",
-        "sql",
         "filter",
         "sort",
         "paginate"
