@@ -10,7 +10,7 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="DjinORM Criteria">
+        <testsuite name="DjinORM filter-sort-paginate">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

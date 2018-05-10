@@ -9,8 +9,9 @@ namespace DjinORM\Repositories\Sql;
 
 use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
 use DjinORM\Components\FilterSortPaginate\Sort;
+use DjinORM\Components\FilterSortPaginate\Filters\AndFilter;
 
-class FSP
+class FilterSortPaginate
 {
 
     /**
@@ -26,16 +27,16 @@ class FSP
      */
     protected $sort;
     /**
-     * @var FilterInterface[]
+     * @var FilterInterface
      */
-    protected $filters;
+    protected $filter;
 
-    public function __construct(int $pageNumber = 1, int $pageSize = 20, Sort $sort = null, array $filters = [])
+    public function __construct(int $pageNumber = 1, int $pageSize = 20, Sort $sort = null, FilterInterface $filter = null)
     {
         $this->pageNumber = $pageNumber;
         $this->pageSize = $pageSize;
         $this->sort = $sort ?? new Sort();
-        $this->filters = $filters;
+        $this->filter = $filter ?? new AndFilter();
     }
 
     /**
@@ -48,38 +49,29 @@ class FSP
 
     /**
      * @param Sort $sort
-     * @return FSP
+     * @return FilterSortPaginate
      */
-    public function setSort(Sort $sort): FSP
+    public function setSort(Sort $sort): FilterSortPaginate
     {
         $this->sort = $sort;
         return $this;
     }
 
     /**
-     * @return FilterInterface[]
+     * @return FilterInterface
      */
-    public function getFilters(): array
+    public function getFilter(): FilterInterface
     {
-        return $this->filters;
+        return $this->filter;
     }
 
     /**
      * @param FilterInterface $condition
-     * @return FSP
+     * @return FilterSortPaginate
      */
-    public function addFilter(FilterInterface $condition): self
+    public function setFilter(FilterInterface $condition): self
     {
-        $this->filters[] = $condition;
-        return $this;
-    }
-
-    /**
-     * @return FSP
-     */
-    public function clearFilters(): self
-    {
-        $this->filters = [];
+        $this->filter = $condition;
         return $this;
     }
 
@@ -93,9 +85,9 @@ class FSP
 
     /**
      * @param int $pageNumber
-     * @return FSP
+     * @return FilterSortPaginate
      */
-    public function setPageNumber(int $pageNumber): FSP
+    public function setPageNumber(int $pageNumber): FilterSortPaginate
     {
         $this->pageNumber = $pageNumber;
         return $this;
@@ -111,9 +103,9 @@ class FSP
 
     /**
      * @param int $pageSize
-     * @return FSP
+     * @return FilterSortPaginate
      */
-    public function setPageSize(int $pageSize): FSP
+    public function setPageSize(int $pageSize): FilterSortPaginate
     {
         $this->pageSize = $pageSize;
         return $this;
