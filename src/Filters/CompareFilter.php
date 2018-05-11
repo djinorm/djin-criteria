@@ -4,10 +4,9 @@
  * Datetime: 09.05.2018 22:18
  */
 
-namespace DjinORM\Components\Criteria\Conditions;
+namespace DjinORM\Components\FilterSortPaginate\Filters;
 
 
-use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
 use DjinORM\Components\FilterSortPaginate\Exceptions\InvalidComparatorException;
 
 class CompareFilter implements FilterInterface

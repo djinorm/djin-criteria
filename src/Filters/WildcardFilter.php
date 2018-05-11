@@ -10,6 +10,9 @@ namespace DjinORM\Components\FilterSortPaginate\Filters;
 class WildcardFilter implements FilterInterface
 {
 
+    const ANY = '*';
+    const ONE = '?';
+
     /**
      * @var string
      */

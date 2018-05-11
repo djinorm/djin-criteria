@@ -9,7 +9,6 @@ namespace DjinORM\Repositories\Sql;
 
 use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
 use DjinORM\Components\FilterSortPaginate\Sort;
-use DjinORM\Components\FilterSortPaginate\Filters\AndFilter;
 
 class FilterSortPaginate
 {
@@ -23,11 +22,11 @@ class FilterSortPaginate
      */
     protected $pageSize;
     /**
-     * @var Sort
+     * @var Sort|null
      */
     protected $sort;
     /**
-     * @var FilterInterface
+     * @var FilterInterface|null
      */
     protected $filter;
 
@@ -35,14 +34,14 @@ class FilterSortPaginate
     {
         $this->pageNumber = $pageNumber;
         $this->pageSize = $pageSize;
-        $this->sort = $sort ?? new Sort();
-        $this->filter = $filter ?? new AndFilter();
+        $this->sort = $sort;
+        $this->filter = $filter;
     }
 
     /**
-     * @return Sort
+     * @return Sort|null
      */
-    public function getSort(): Sort
+    public function getSort(): ?Sort
     {
         return $this->sort;
     }
@@ -51,27 +50,27 @@ class FilterSortPaginate
      * @param Sort $sort
      * @return FilterSortPaginate
      */
-    public function setSort(Sort $sort): FilterSortPaginate
+    public function setSort(Sort $sort = null): FilterSortPaginate
     {
         $this->sort = $sort;
         return $this;
     }
 
     /**
-     * @return FilterInterface
+     * @return FilterInterface|null
      */
-    public function getFilter(): FilterInterface
+    public function getFilter(): ?FilterInterface
     {
         return $this->filter;
     }
 
     /**
-     * @param FilterInterface $condition
+     * @param FilterInterface $filter
      * @return FilterSortPaginate
      */
-    public function setFilter(FilterInterface $condition): self
+    public function setFilter(FilterInterface $filter = null): self
     {
-        $this->filter = $condition;
+        $this->filter = $filter;
         return $this;
     }
 
