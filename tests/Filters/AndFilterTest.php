@@ -19,7 +19,8 @@ class AndFilterTest extends TestCase
 
         /** @var FilterInterface $sub_2 */
         $sub_2 = $this->createMock(FilterInterface::class);
-        $filter = new AndFilter($sub_1, $sub_2);
+
+        $filter = new AndFilter([$sub_1, $sub_2]);
 
         $this->assertInstanceOf(AndFilter::class, $filter);
         $this->assertEquals([$sub_1, $sub_2], $filter->getFilters());
@@ -31,6 +32,6 @@ class AndFilterTest extends TestCase
         $filter = $this->createMock(FilterInterface::class);
 
         $this->expectException(\TypeError::class);
-        new AndFilter($filter, $this);
+        new AndFilter([$filter, $this]);
     }
 }

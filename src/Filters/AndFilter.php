@@ -14,8 +14,11 @@ class AndFilter implements FilterInterface
     /** @var FilterInterface[] */
     protected $filters;
 
-    public function __construct(FilterInterface ...$filters)
+    public function __construct(array $filters)
     {
+        foreach ($filters as $filter) {
+            $this->guardInvalidFilter($filter);
+        }
         $this->filters = $filters;
     }
 
@@ -25,6 +28,11 @@ class AndFilter implements FilterInterface
     public function getFilters(): array
     {
         return $this->filters;
+    }
+
+    private function guardInvalidFilter(FilterInterface $filter)
+    {
+        return $filter;
     }
 
 }
