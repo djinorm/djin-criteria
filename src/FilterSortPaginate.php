@@ -4,11 +4,10 @@
  * Datetime: 09.05.2018 21:21
  */
 
-namespace DjinORM\Repositories\Sql;
+namespace DjinORM\Components\FilterSortPaginate;
 
 
 use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
-use DjinORM\Components\FilterSortPaginate\Sort;
 
 class FilterSortPaginate
 {
