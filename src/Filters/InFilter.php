@@ -34,11 +34,11 @@ class InFilter implements FilterInterface
     }
 
     /**
-     * @param array $values
+     * @return array
      */
-    public function setValues(array $values): void
+    public function getValues(): array
     {
-        $this->values = $values;
+        return $this->values;
     }
 
 }
