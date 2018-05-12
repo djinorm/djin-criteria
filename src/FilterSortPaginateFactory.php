@@ -8,6 +8,7 @@ namespace DjinORM\Components\FilterSortPaginate;
 
 
 use Adbar\Dot;
+use DjinORM\Components\FilterSortPaginate\Exceptions\ParseException;
 use DjinORM\Components\FilterSortPaginate\Exceptions\UnsupportedFilterException;
 use DjinORM\Components\FilterSortPaginate\Filters\AndFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\BetweenFilter;
@@ -41,25 +42,25 @@ class FilterSortPaginateFactory
 
     /**
      * @return FilterSortPaginate
+     * @throws ParseException
      * @throws UnsupportedFilterException
      */
     public function create(): FilterSortPaginate
     {
-        $page = $this->data->get('page', 1);
-        $pageSize = $this->data->get('pageSize', 20);
+        $page = (int) $this->data->get('page', 1);
+        $pageSize = (int) $this->data->get('pageSize', 20);
 
         if ($this->data->has('sort')) {
             $sort = new Sort();
             foreach ($this->data->get('sort') as $sortBy => $sortDirection) {
-                $sort->add($sortBy, $sortDirection);
+                $sort->add($sortBy, (int) $sortDirection);
             }
         } else {
             $sort = null;
         }
 
         if ($this->data->has('filters')) {
-            $jsonFilters = \json_decode($this->data->get('filters'), true);
-            $filters = $this->parse($jsonFilters);
+            $filters = $this->parse($this->data->get('filters'));
         } else {
             $filters = null;
         }
@@ -71,6 +72,7 @@ class FilterSortPaginateFactory
      * @param array $filtersArray
      * @return FilterInterface
      * @throws UnsupportedFilterException
+     * @throws ParseException
      */
     protected function parse(array $filtersArray): ?FilterInterface
     {
@@ -78,12 +80,14 @@ class FilterSortPaginateFactory
             switch ($fieldOrOperation) {
                 case '$or':
                     $orFilters = [];
+                    $this->guardNotArray($conditions);
                     foreach ($conditions as $subFieldOrOperation => $condition) {
                         $orFilters[] = $this->parse([$subFieldOrOperation => $condition]);
                     }
                     return new OrFilter($orFilters);
                 case '$and':
                     $andFilters = [];
+                    $this->guardNotArray($conditions);
                     foreach ($conditions as $subFieldOrOperation => $condition) {
                         $andFilters[] = $this->parse([$subFieldOrOperation => $condition]);
                     }
@@ -93,7 +97,7 @@ class FilterSortPaginateFactory
             }
         }
 
-        throw new \ParseError('');
+        throw new ParseException('Fail to parse Filter-Sort-Paginate query');
     }
 
     /**
@@ -133,7 +137,7 @@ class FilterSortPaginateFactory
             case '$compare':
                 return new CompareFilter($field, $params[0], $params[1]);
             case '$empty':
-                return new EmptyFilter($field);
+                return $params[0] ? new EmptyFilter($field) : new NotEmptyFilter($field);
             case '$equals':
                 return new EqualsFilter($field, $params[0]);
             case '$fulltextSearch':
@@ -144,8 +148,6 @@ class FilterSortPaginateFactory
                 return new WildcardFilter($field, $params[0]);
             case '$notBetween':
                 return new NotBetweenFilter($field, $params[0], $params[1]);
-            case '$notEmpty':
-                return new NotEmptyFilter($field);
             case '$notEquals':
                 return new NotEqualsFilter($field, $params[0]);
             case '$notIn':
@@ -154,6 +156,17 @@ class FilterSortPaginateFactory
                 return new NotWildcardFilter($field, $params[0]);
             default:
                 throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
+        }
+    }
+
+    /**
+     * @param $variable
+     * @throws ParseException
+     */
+    private function guardNotArray($variable)
+    {
+        if (!is_array($variable)) {
+            throw new ParseException('Fail to parse field query string');
         }
     }
 

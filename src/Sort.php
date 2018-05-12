@@ -15,6 +15,13 @@ class Sort
 
     private $sort = [];
 
+    public function __construct(array $sort = [])
+    {
+        foreach ($sort as $sortBy => $sortDirection) {
+            $this->add($sortBy, $sortDirection);
+        }
+    }
+
     public function get(): array
     {
         return $this->sort;
@@ -22,12 +29,20 @@ class Sort
 
     public function add(string $sortBy, int $sortDirection = self::SORT_DESC)
     {
+        $this->guardSortDirection($sortDirection);
         $this->sort[$sortBy] = $sortDirection;
     }
 
     public function clear()
     {
         $this->sort = [];
+    }
+
+    private function guardSortDirection(int $sort)
+    {
+        if (!in_array($sort, [self::SORT_ASC, self::SORT_DESC])) {
+            throw new \InvalidArgumentException("Invalid sort direction «{$sort}»");
+        }
     }
 
 }
