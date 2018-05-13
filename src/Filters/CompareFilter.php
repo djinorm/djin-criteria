@@ -15,7 +15,7 @@ class CompareFilter implements FilterInterface
     const EQUALS = '=';
     const GREAT_THAN = '>';
     const GREAT_OR_EQUALS_THAN = '>=';
-    const LESS_THAN = '<=';
+    const LESS_THAN = '<';
     const LESS_OR_EQUALS_THAN = '<=';
 
     /**
