@@ -18,11 +18,11 @@ PHP
                     'field_5' => ['$equals' => 'value'],
                     'field_6' => ['$fulltextSearch' => 'hello world'],
                     'field_7' => ['$in' => [1, 2, 3, 4, 'five', 'six']],
-                    'field_8' => ['$wildcard' => '*hello _____!'],
+                    'field_8' => ['$wildcard' => '*hello ?????!'],
                     'field_9' => ['$notBetween' => [100, 200]],
                     'field_10' => ['$notEquals' => 'not-value'],
                     'field_11' => ['$notIn' => [9, 8, 7]],
-                    'field_12' => ['$notWildcard' => '*hello _____!'],
+                    'field_12' => ['$notWildcard' => '*hello ?????!'],
                 ],
                 'field_1' => [
                     '$empty' => false,
@@ -55,11 +55,11 @@ JSON
                     "field_5": {"$equals": "value"},
                     "field_6": {"$fulltextSearch": "hello world"},
                     "field_7": {"$in": [1, 2, 3, 4, "five", "six"]},
-                    "field_8": {"$wildcard": "*hello _____!"},
+                    "field_8": {"$wildcard": "*hello ?????!"},
                     "field_9": {"$notBetween": [100, 200]},
                     "field_10": {"$notEquals": "not-value"},
                     "field_11": {"$notIn": [9, 8, 7]},
-                    "field_12": {"$notWildcard": "*hello _____!"}
+                    "field_12": {"$notWildcard": "*hello ?????!"}
                 },
                 "field_1": {
                     "$empty": false,
