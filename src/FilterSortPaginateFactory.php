@@ -41,9 +41,14 @@ class FilterSortPaginateFactory
 
     /** @var array */
     protected $listFields;
+    /**
+     * @var int
+     */
+    private $defaultPageSize;
 
-    public function __construct()
+    public function __construct(int $defaultPageSize = 20)
     {
+        $this->defaultPageSize = $defaultPageSize;
         $this->filters = [
             '$between' => function(string $field, array $params) {
                 return new BetweenFilter($field, $params[0], $params[1]);
@@ -120,13 +125,13 @@ class FilterSortPaginateFactory
             if ($data->get('paginate')) {
                 $paginate = new Paginate(
                     $data->get('paginate.number', 1),
-                    $data->get('paginate.size', 20)
+                    $data->get('paginate.size', $this->defaultPageSize)
                 );
             } else {
                 $paginate = null;
             }
         } else {
-            $paginate = new Paginate(1, 20);
+            $paginate = new Paginate(1, $this->defaultPageSize);
         }
 
         if ($data->has('sort')) {

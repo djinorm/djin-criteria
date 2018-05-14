@@ -198,6 +198,12 @@ class FilterSortPaginateFactoryTest extends TestCase
             new FilterSortPaginate(new Paginate(1, 20)),
            $this->factory->create([])
         );
+
+        $factory = new FilterSortPaginateFactory(50);
+        $this->assertEquals(
+            new FilterSortPaginate(new Paginate(1, 50)),
+            $factory->create([])
+        );
     }
 
     public function testCreateWithoutPagination()
