@@ -33,49 +33,94 @@ class FilterSortPaginateFactory
     const LIST_BLACK = 0;
     const LIST_WHITE = 1;
 
-    /** @var Dot */
-    protected $data;
-
-    /** @var FilterSortPaginate */
-    protected $fsp;
+    /** @var callable[] */
+    private $filters;
 
     /** @var int */
     protected $listType;
 
     /** @var array */
-    protected $fields;
+    protected $listFields;
+
+    public function __construct()
+    {
+        $this->filters = [
+            '$between' => function(string $field, array $params) {
+                return new BetweenFilter($field, $params[0], $params[1]);
+            },
+            '$compare' => function(string $field, array $params) {
+                return new CompareFilter($field, $params[0], $params[1]);
+            },
+            '$empty' => function(string $field, array $params) {
+                return $params[0] ? new EmptyFilter($field) : new NotEmptyFilter($field);
+            },
+            '$equals' => function(string $field, array $params) {
+                return new EqualsFilter($field, $params[0]);
+            },
+            '$fulltextSearch' => function(string $field, array $params) {
+                return new FulltextSearchFilter($field, $params[0]);
+            },
+            '$in' => function(string $field, array $params) {
+                return new InFilter($field, $params);
+            },
+            '$wildcard' => function(string $field, array $params) {
+                return new WildcardFilter($field, $params[0]);
+            },
+            '$notBetween' => function(string $field, array $params) {
+                return new NotBetweenFilter($field, $params[0], $params[1]);
+            },
+            '$notEquals' => function(string $field, array $params) {
+                return new NotEqualsFilter($field, $params[0]);
+            },
+            '$notIn' => function(string $field, array $params) {
+                return new NotInFilter($field, $params);
+            },
+            '$notWildcard' => function(string $field, array $params) {
+                return new NotWildcardFilter($field, $params[0]);
+            },
+        ];
+    }
+
+    public function getFilters(): array
+    {
+        return $this->filters;
+    }
+
+    public function addFilter(string $alias, callable $callback)
+    {
+        $this->filters[$alias] = $callback;
+    }
+
+    public function removeFilter(string $alias)
+    {
+        unset($this->filters[$alias]);
+    }
 
     /**
-     * FilterSortPaginateFactory constructor.
      * @param array $data
      * @param int $listType
      * @param array $fields
+     * @return FilterSortPaginate
      * @throws InvalidListTypeException
+     * @throws ParseException
+     * @throws UnsupportedFilterException
      */
-    public function __construct(array $data, $listType = self::LIST_BLACK, $fields = [])
+    public function create(array $data, $listType = self::LIST_BLACK, $fields = []): FilterSortPaginate
     {
-        $this->data = new Dot($data);
+        $data = new Dot($data);
 
         if (!in_array($listType, [self::LIST_BLACK, self::LIST_WHITE])) {
             throw new InvalidListTypeException("Invalid list type «{$listType}»");
         }
 
         $this->listType = $listType;
-        $this->fields = $fields;
-    }
+        $this->listFields = $fields;
 
-    /**
-     * @return FilterSortPaginate
-     * @throws ParseException
-     * @throws UnsupportedFilterException
-     */
-    public function create(): FilterSortPaginate
-    {
-        if ($this->data->has('paginate')) {
-            if ($this->data->get('paginate')) {
+        if ($data->has('paginate')) {
+            if ($data->get('paginate')) {
                 $paginate = new Paginate(
-                    $this->data->get('paginate.number', 1),
-                    $this->data->get('paginate.size', 20)
+                    $data->get('paginate.number', 1),
+                    $data->get('paginate.size', 20)
                 );
             } else {
                 $paginate = null;
@@ -84,9 +129,9 @@ class FilterSortPaginateFactory
             $paginate = new Paginate(1, 20);
         }
 
-        if ($this->data->has('sort')) {
+        if ($data->has('sort')) {
             $sort = new Sort();
-            foreach ($this->data->get('sort') as $sortBy => $sortDirection) {
+            foreach ($data->get('sort') as $sortBy => $sortDirection) {
                 if ($this->canUseField($sortBy)) {
                     $sort->add($sortBy, (int) $sortDirection);
                 }
@@ -98,8 +143,8 @@ class FilterSortPaginateFactory
             $sort = null;
         }
 
-        if ($this->data->has('filters')) {
-            $filters = $this->parse($this->data->get('filters'));
+        if ($data->has('filters')) {
+            $filters = $this->parse($data->get('filters'));
         } else {
             $filters = null;
         }
@@ -192,50 +237,19 @@ class FilterSortPaginateFactory
             $params = [$params];
         }
 
-        switch ($filter) {
-            case '$between':
-                return new BetweenFilter($field, $params[0], $params[1]);
-            case '$compare':
-                return new CompareFilter($field, $params[0], $params[1]);
-            case '$empty':
-                return $params[0] ? new EmptyFilter($field) : new NotEmptyFilter($field);
-            case '$equals':
-                return new EqualsFilter($field, $params[0]);
-            case '$fulltextSearch':
-                return new FulltextSearchFilter($field, $params[0]);
-            case '$in':
-                return new InFilter($field, $params);
-            case '$wildcard':
-                return new WildcardFilter($field, $params[0]);
-            case '$notBetween':
-                return new NotBetweenFilter($field, $params[0], $params[1]);
-            case '$notEquals':
-                return new NotEqualsFilter($field, $params[0]);
-            case '$notIn':
-                return new NotInFilter($field, $params);
-            case '$notWildcard':
-                return new NotWildcardFilter($field, $params[0]);
-            default:
-                return $this->customFilters($field, $filter, $params);
+        foreach ($this->filters as $filterAlias => $callback) {
+            if ($filterAlias == $filter) {
+                return $callback($field, $params);
+            }
         }
-    }
 
-    /**
-     * @param string $field
-     * @param string $filter
-     * @param array $params
-     * @return FilterInterface
-     * @throws UnsupportedFilterException
-     */
-    protected function customFilters(string $field, string $filter, array $params): FilterInterface
-    {
         throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
     }
 
     protected function canUseField(string $field): bool
     {
-        $whiteApprove = $this->listType == self::LIST_WHITE && in_array($field, $this->fields);
-        $blackApprove = $this->listType == self::LIST_BLACK && !in_array($field, $this->fields);
+        $whiteApprove = $this->listType == self::LIST_WHITE && in_array($field, $this->listFields);
+        $blackApprove = $this->listType == self::LIST_BLACK && !in_array($field, $this->listFields);
         return $whiteApprove || $blackApprove;
     }
 

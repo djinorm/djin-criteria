@@ -12,6 +12,7 @@ use DjinORM\Components\FilterSortPaginate\Filters\BetweenFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\CompareFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\EmptyFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\EqualsFilter;
+use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
 use DjinORM\Components\FilterSortPaginate\Filters\FulltextSearchFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\InFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\NotBetweenFilter;
@@ -28,9 +29,21 @@ class FilterSortPaginateFactoryTest extends TestCase
     
     /** @var array */
     private $array;
+
+    /** @var Paginate */
+    private $paginate;
+
+    /** @var Sort */
+    private $sort;
+
+    /** @var FilterInterface */
+    private $filter;
     
     /** @var FilterSortPaginate */
     private $fsp;
+
+    /** @var FilterSortPaginateFactory */
+    private $factory;
 
     protected function setUp(): void 
     {
@@ -72,11 +85,11 @@ class FilterSortPaginateFactoryTest extends TestCase
             ],
         ];
 
-        $paginate = new Paginate(10, 50);
+        $this->paginate = new Paginate(10, 50);
 
-        $sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
+        $this->sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
         
-        $filter = new OrFilter([
+        $this->filter = new OrFilter([
             new OrFilter([
                 new AndFilter([
                     new BetweenFilter('field_1', '2018-01-01', '2018-12-31'),
@@ -100,13 +113,38 @@ class FilterSortPaginateFactoryTest extends TestCase
             new BetweenFilter('datetime', '2018-01-01', '2018-12-31')
         ]);
 
-        $this->fsp = new FilterSortPaginate($paginate, $sort, $filter);
+        $this->fsp = new FilterSortPaginate($this->paginate, $this->sort, $this->filter);
+
+        $this->factory = new FilterSortPaginateFactory();
+    }
+
+    public function testGetFilters()
+    {
+        $this->assertCount(11, $this->factory->getFilters());
+    }
+
+    public function testAddFilter()
+    {
+        $this->factory->addFilter('$test', function (string $field, array $params) {
+            return new class($field, $params[0]) implements FilterInterface {
+                public function __construct(string $field, $param)
+                {
+
+                }
+            };
+        });
+        $this->assertCount(12, $this->factory->getFilters());
+    }
+
+    public function testRemoveFilter()
+    {
+        $this->factory->removeFilter('$between');
+        $this->assertCount(10, $this->factory->getFilters());
     }
 
     public function testCreate()
     {
-        $factory = new FilterSortPaginateFactory($this->array);
-        $this->assertEquals($this->fsp, $factory->create());
+        $this->assertEquals($this->fsp, $this->factory->create($this->array));
     }
 
     public function testCreateWhitelist()
@@ -122,8 +160,7 @@ class FilterSortPaginateFactoryTest extends TestCase
         ]);
         $fspExpected = new FilterSortPaginate($paginate, $sort, $filter);
 
-        $factory = new FilterSortPaginateFactory($this->array, FilterSortPaginateFactory::LIST_WHITE, ['field_1']);
-        $fspActual = $factory->create();
+        $fspActual = $this->factory->create($this->array, FilterSortPaginateFactory::LIST_WHITE, ['field_1']);
 
         $this->assertEquals($fspExpected, $fspActual);
     }
@@ -150,39 +187,35 @@ class FilterSortPaginateFactoryTest extends TestCase
         ]);
         $fspExpected = new FilterSortPaginate($paginate, $sort, $filter);
 
-        $factory = new FilterSortPaginateFactory($this->array, FilterSortPaginateFactory::LIST_BLACK, ['field_1']);
-        $fspActual = $factory->create();
+        $fspActual = $this->factory->create($this->array, FilterSortPaginateFactory::LIST_BLACK, ['field_1']);
 
         $this->assertEquals($fspExpected, $fspActual);
     }
 
     public function testCreateEmptyConfig()
     {
-        $factory = new FilterSortPaginateFactory([]);
         $this->assertEquals(
             new FilterSortPaginate(new Paginate(1, 20)),
-           $factory->create()
+           $this->factory->create([])
         );
     }
 
     public function testCreateWithoutPagination()
     {
-        $factory = new FilterSortPaginateFactory(['paginate' => null]);
         $this->assertEquals(
             new FilterSortPaginate(),
-            $factory->create()
+            $this->factory->create(['paginate' => null])
         );
     }
 
     public function testCreateUnsupportedFilter()
     {
         $this->expectException(UnsupportedFilterException::class);
-        $factory =  new FilterSortPaginateFactory([
+        $this->factory->create([
             'filters' => [
                 'datetime' => ['$unsupportedFilter' => ['2018-01-01', '2018-12-31']],
             ]
         ]);
-        $factory->create();
     }
 
 }
