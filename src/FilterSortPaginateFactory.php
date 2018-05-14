@@ -216,10 +216,8 @@ class FilterSortPaginateFactory
             case '$notWildcard':
                 return new NotWildcardFilter($field, $params[0]);
             default:
-                $this->customFilters($field, $filter, $params);
+                return $this->customFilters($field, $filter, $params);
         }
-
-        throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
     }
 
     /**
