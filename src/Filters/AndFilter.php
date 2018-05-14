@@ -18,8 +18,10 @@ class AndFilter implements FilterInterface
     {
         foreach ($filters as $filter) {
             $this->guardInvalidFilter($filter);
+            if ($filter) {
+                $this->filters[] = $filter;
+            }
         }
-        $this->filters = $filters;
     }
 
     /**
@@ -30,7 +32,7 @@ class AndFilter implements FilterInterface
         return $this->filters;
     }
 
-    private function guardInvalidFilter(FilterInterface $filter)
+    private function guardInvalidFilter(FilterInterface $filter = null)
     {
         return $filter;
     }

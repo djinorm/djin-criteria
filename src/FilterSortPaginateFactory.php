@@ -8,6 +8,7 @@ namespace DjinORM\Components\FilterSortPaginate;
 
 
 use Adbar\Dot;
+use DjinORM\Components\FilterSortPaginate\Exceptions\InvalidListTypeException;
 use DjinORM\Components\FilterSortPaginate\Exceptions\ParseException;
 use DjinORM\Components\FilterSortPaginate\Exceptions\UnsupportedFilterException;
 use DjinORM\Components\FilterSortPaginate\Filters\AndFilter;
@@ -29,15 +30,38 @@ use DjinORM\Components\FilterSortPaginate\Filters\WildcardFilter;
 class FilterSortPaginateFactory
 {
 
+    const LIST_BLACK = 0;
+    const LIST_WHITE = 1;
+
     /** @var Dot */
     protected $data;
 
     /** @var FilterSortPaginate */
     protected $fsp;
 
-    public function __construct(array $data)
+    /** @var int */
+    protected $listType;
+
+    /** @var array */
+    protected $fields;
+
+    /**
+     * FilterSortPaginateFactory constructor.
+     * @param array $data
+     * @param int $listType
+     * @param array $fields
+     * @throws InvalidListTypeException
+     */
+    public function __construct(array $data, $listType = self::LIST_BLACK, $fields = [])
     {
         $this->data = new Dot($data);
+
+        if (!in_array($listType, [self::LIST_BLACK, self::LIST_WHITE])) {
+            throw new InvalidListTypeException("Invalid list type «{$listType}»");
+        }
+
+        $this->listType = $listType;
+        $this->fields = $fields;
     }
 
     /**
@@ -79,25 +103,49 @@ class FilterSortPaginateFactory
         foreach ($filtersArray as $fieldOrOperation => $conditions) {
             switch ($fieldOrOperation) {
                 case '$or':
-                    $orFilters = [];
-                    $this->guardNotArray($conditions);
-                    foreach ($conditions as $subFieldOrOperation => $condition) {
-                        $orFilters[] = $this->parse([$subFieldOrOperation => $condition]);
-                    }
-                    return new OrFilter($orFilters);
+                    return $this->operationFilter($conditions, OrFilter::class);
                 case '$and':
-                    $andFilters = [];
-                    $this->guardNotArray($conditions);
-                    foreach ($conditions as $subFieldOrOperation => $condition) {
-                        $andFilters[] = $this->parse([$subFieldOrOperation => $condition]);
-                    }
-                    return new AndFilter($andFilters);
+                    return $this->operationFilter($conditions, AndFilter::class);
                 default:
+                    $whiteApprove = $this->listType == self::LIST_WHITE && in_array($fieldOrOperation, $this->fields);
+                    $blackApprove = $this->listType == self::LIST_BLACK && !in_array($fieldOrOperation, $this->fields);
+                    if (!$whiteApprove && !$blackApprove) {
+                        return null;
+                    }
                     return $this->parseField($fieldOrOperation, $conditions);
             }
         }
 
         throw new ParseException('Fail to parse Filter-Sort-Paginate query');
+    }
+
+    /**
+     * @param array $conditions
+     * @param $filterClass
+     * @return FilterInterface|null
+     * @throws ParseException
+     * @throws UnsupportedFilterException
+     */
+    private function operationFilter(array $conditions, $filterClass): ?FilterInterface
+    {
+        $filters = [];
+        $this->guardNotArray($conditions);
+        foreach ($conditions as $subFieldOrOperation => $condition) {
+            $filter = $this->parse([$subFieldOrOperation => $condition]);
+            if ($filter) {
+                $filters[] = $filter;
+            }
+        }
+
+        if (empty($filters)) {
+            return null;
+        }
+
+        if (count($filters) == 1) {
+            return reset($filters);
+        }
+
+        return new $filterClass($filters);
     }
 
     /**

@@ -6,7 +6,6 @@
 
 namespace DjinORM\Components\FilterSortPaginate;
 
-use DjinORM\Components\FilterSortPaginate\Exceptions\ParseException;
 use DjinORM\Components\FilterSortPaginate\Exceptions\UnsupportedFilterException;
 use DjinORM\Components\FilterSortPaginate\Filters\AndFilter;
 use DjinORM\Components\FilterSortPaginate\Filters\BetweenFilter;
@@ -106,6 +105,51 @@ class FilterSortPaginateFactoryTest extends TestCase
         $this->assertEquals($this->fsp, $factory->create());
     }
 
+    public function testCreateWhitelist()
+    {
+        $sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
+        $filter = new OrFilter([
+            new BetweenFilter('field_1', '2018-01-01', '2018-12-31'),
+            new AndFilter([
+                new NotEmptyFilter('field_1'),
+                new CompareFilter('field_1', CompareFilter::LESS_THAN, 10000),
+            ]),
+        ]);
+        $fspExpected = new FilterSortPaginate(10, 50, $sort, $filter);
+
+        $factory = new FilterSortPaginateFactory($this->array, FilterSortPaginateFactory::LIST_WHITE, ['field_1']);
+        $fspActual = $factory->create();
+
+        $this->assertEquals($fspExpected, $fspActual);
+    }
+
+    public function testCreateBlacklist()
+    {
+        $sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
+        $filter = new OrFilter([
+            new AndFilter([
+                new CompareFilter('field_2', CompareFilter::GREAT_THAN, 500),
+                new EmptyFilter('field_3'),
+                new NotEmptyFilter('field_4'),
+                new EqualsFilter('field_5', 'value'),
+                new FulltextSearchFilter('field_6', 'hello world'),
+                new InFilter('field_7', [1, 2, 3, 4, 'five', 'six']),
+                new WildcardFilter('field_8', '*hello _____!'),
+                new NotBetweenFilter('field_9', 100, 200),
+                new NotEqualsFilter('field_10', 'not-value'),
+                new NotInFilter('field_11', [9, 8, 7]),
+                new NotWildcardFilter('field_12', '*hello _____!'),
+            ]),
+            new BetweenFilter('datetime', '2018-01-01', '2018-12-31')
+        ]);
+        $fspExpected = new FilterSortPaginate(10, 50, $sort, $filter);
+
+        $factory = new FilterSortPaginateFactory($this->array, FilterSortPaginateFactory::LIST_BLACK, ['field_1']);
+        $fspActual = $factory->create();
+
+        $this->assertEquals($fspExpected, $fspActual);
+    }
+
     public function testCreateEmptyConfig()
     {
         $factory =  new FilterSortPaginateFactory([]);
@@ -121,17 +165,6 @@ class FilterSortPaginateFactoryTest extends TestCase
         $factory =  new FilterSortPaginateFactory([
             'filters' => [
                 'datetime' => ['$unsupportedFilter' => ['2018-01-01', '2018-12-31']],
-            ]
-        ]);
-        $factory->create();
-    }
-
-    public function testCreateParseException()
-    {
-        $this->expectException(ParseException::class);
-        $factory =  new FilterSortPaginateFactory([
-            'filters' => [
-                ['datetime'],
             ]
         ]);
         $factory->create();
