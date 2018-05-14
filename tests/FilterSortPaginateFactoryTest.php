@@ -37,8 +37,10 @@ class FilterSortPaginateFactoryTest extends TestCase
         parent::setUp();
         
         $this->array = [
-            'page' => 10,
-            'pageSize' => 50,
+            'paginate' => [
+                'number' => 10,
+                'size' => 50,
+            ],
             'sort' => [
                 'field_1' => Sort::SORT_DESC,
                 'field_2' => Sort::SORT_ASC,
@@ -70,6 +72,8 @@ class FilterSortPaginateFactoryTest extends TestCase
             ],
         ];
 
+        $paginate = new Paginate(10, 50);
+
         $sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
         
         $filter = new OrFilter([
@@ -96,7 +100,7 @@ class FilterSortPaginateFactoryTest extends TestCase
             new BetweenFilter('datetime', '2018-01-01', '2018-12-31')
         ]);
 
-        $this->fsp = new FilterSortPaginate(10, 50, $sort, $filter);
+        $this->fsp = new FilterSortPaginate($paginate, $sort, $filter);
     }
 
     public function testCreate()
@@ -107,6 +111,7 @@ class FilterSortPaginateFactoryTest extends TestCase
 
     public function testCreateWhitelist()
     {
+        $paginate = $paginate = new Paginate(10, 50);
         $sort = new Sort(['field_1' => Sort::SORT_DESC]);
         $filter = new OrFilter([
             new BetweenFilter('field_1', '2018-01-01', '2018-12-31'),
@@ -115,7 +120,7 @@ class FilterSortPaginateFactoryTest extends TestCase
                 new CompareFilter('field_1', CompareFilter::LESS_THAN, 10000),
             ]),
         ]);
-        $fspExpected = new FilterSortPaginate(10, 50, $sort, $filter);
+        $fspExpected = new FilterSortPaginate($paginate, $sort, $filter);
 
         $factory = new FilterSortPaginateFactory($this->array, FilterSortPaginateFactory::LIST_WHITE, ['field_1']);
         $fspActual = $factory->create();
@@ -125,6 +130,7 @@ class FilterSortPaginateFactoryTest extends TestCase
 
     public function testCreateBlacklist()
     {
+        $paginate = $paginate = new Paginate(10, 50);
         $sort = new Sort(['field_2' => Sort::SORT_ASC]);
         $filter = new OrFilter([
             new AndFilter([
@@ -142,7 +148,7 @@ class FilterSortPaginateFactoryTest extends TestCase
             ]),
             new BetweenFilter('datetime', '2018-01-01', '2018-12-31')
         ]);
-        $fspExpected = new FilterSortPaginate(10, 50, $sort, $filter);
+        $fspExpected = new FilterSortPaginate($paginate, $sort, $filter);
 
         $factory = new FilterSortPaginateFactory($this->array, FilterSortPaginateFactory::LIST_BLACK, ['field_1']);
         $fspActual = $factory->create();
@@ -152,10 +158,19 @@ class FilterSortPaginateFactoryTest extends TestCase
 
     public function testCreateEmptyConfig()
     {
-        $factory =  new FilterSortPaginateFactory([]);
+        $factory = new FilterSortPaginateFactory([]);
         $this->assertEquals(
-            new FilterSortPaginate(1, 20),
+            new FilterSortPaginate(new Paginate(1, 20)),
            $factory->create()
+        );
+    }
+
+    public function testCreateWithoutPagination()
+    {
+        $factory = new FilterSortPaginateFactory(['paginate' => null]);
+        $this->assertEquals(
+            new FilterSortPaginate(),
+            $factory->create()
         );
     }
 

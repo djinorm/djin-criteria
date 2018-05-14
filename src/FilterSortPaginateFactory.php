@@ -71,8 +71,18 @@ class FilterSortPaginateFactory
      */
     public function create(): FilterSortPaginate
     {
-        $page = (int) $this->data->get('page', 1);
-        $pageSize = (int) $this->data->get('pageSize', 20);
+        if ($this->data->has('paginate')) {
+            if ($this->data->get('paginate')) {
+                $paginate = new Paginate(
+                    $this->data->get('paginate.number', 1),
+                    $this->data->get('paginate.size', 20)
+                );
+            } else {
+                $paginate = null;
+            }
+        } else {
+            $paginate = new Paginate(1, 20);
+        }
 
         if ($this->data->has('sort')) {
             $sort = new Sort();
@@ -94,7 +104,7 @@ class FilterSortPaginateFactory
             $filters = null;
         }
 
-        return new FilterSortPaginate($page, $pageSize, $sort, $filters);
+        return new FilterSortPaginate($paginate, $sort, $filters);
     }
 
     /**

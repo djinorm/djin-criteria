@@ -15,6 +15,10 @@ class EmptyFilter implements FilterInterface
      */
     protected $field;
 
+    /**
+     * EmptyFilter constructor.
+     * @param string $field
+     */
     public function __construct(string $field)
     {
         $this->field = $field;

@@ -19,6 +19,11 @@ class FulltextSearchFilter implements FilterInterface
      */
     protected $search;
 
+    /**
+     * FulltextSearchFilter constructor.
+     * @param string $field
+     * @param string $search
+     */
     public function __construct(string $field, string $search)
     {
         $this->field = $field;

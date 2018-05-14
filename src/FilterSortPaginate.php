@@ -11,15 +11,10 @@ use DjinORM\Components\FilterSortPaginate\Filters\FilterInterface;
 
 class FilterSortPaginate
 {
-
     /**
-     * @var int
+     * @var Paginate|null
      */
-    protected $pageNumber;
-    /**
-     * @var int
-     */
-    protected $pageSize;
+    protected $paginate;
     /**
      * @var Sort|null
      */
@@ -29,12 +24,29 @@ class FilterSortPaginate
      */
     protected $filter;
 
-    public function __construct(int $pageNumber = 1, int $pageSize = 20, Sort $sort = null, FilterInterface $filter = null)
+    public function __construct(Paginate $paginate = null, Sort $sort = null, FilterInterface $filter = null)
     {
-        $this->pageNumber = $pageNumber;
-        $this->pageSize = $pageSize;
+        $this->paginate = $paginate;
         $this->sort = $sort;
         $this->filter = $filter;
+    }
+
+    /**
+     * @return Paginate|null
+     */
+    public function getPaginate(): ?Paginate
+    {
+        return $this->paginate;
+    }
+
+    /**
+     * @param Paginate|null $paginate
+     * @return FilterSortPaginate
+     */
+    public function setPaginate(?Paginate $paginate): FilterSortPaginate
+    {
+        $this->paginate = $paginate;
+        return $this;
     }
 
     /**
@@ -70,42 +82,6 @@ class FilterSortPaginate
     public function setFilter(FilterInterface $filter = null): self
     {
         $this->filter = $filter;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPageNumber(): int
-    {
-        return $this->pageNumber;
-    }
-
-    /**
-     * @param int $pageNumber
-     * @return FilterSortPaginate
-     */
-    public function setPageNumber(int $pageNumber): FilterSortPaginate
-    {
-        $this->pageNumber = $pageNumber;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPageSize(): int
-    {
-        return $this->pageSize;
-    }
-
-    /**
-     * @param int $pageSize
-     * @return FilterSortPaginate
-     */
-    public function setPageSize(int $pageSize): FilterSortPaginate
-    {
-        $this->pageSize = $pageSize;
         return $this;
     }
 
