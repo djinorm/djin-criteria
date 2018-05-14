@@ -139,7 +139,7 @@ class FilterSortPaginateFactory
      * @throws ParseException
      * @throws UnsupportedFilterException
      */
-    private function operationFilter(array $conditions, $filterClass): ?FilterInterface
+    protected function operationFilter(array $conditions, $filterClass): ?FilterInterface
     {
         $filters = [];
         $this->guardNotArray($conditions);
@@ -167,7 +167,7 @@ class FilterSortPaginateFactory
      * @return FilterInterface
      * @throws UnsupportedFilterException
      */
-    private function parseField(string $field, array $conditions): FilterInterface
+    protected function parseField(string $field, array $conditions): FilterInterface
     {
         $filters = [];
         foreach ($conditions as $filter => $params) {
@@ -186,7 +186,7 @@ class FilterSortPaginateFactory
      * @return FilterInterface
      * @throws UnsupportedFilterException
      */
-    private function createFilter(string $field, string $filter, $params): FilterInterface
+    protected function createFilter(string $field, string $filter, $params): FilterInterface
     {
         if (!is_array($params)) {
             $params = [$params];
@@ -216,11 +216,25 @@ class FilterSortPaginateFactory
             case '$notWildcard':
                 return new NotWildcardFilter($field, $params[0]);
             default:
-                throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
+                $this->customFilters($field, $filter, $params);
         }
+
+        throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
     }
 
-    private function canUseField(string $field): bool
+    /**
+     * @param string $field
+     * @param string $filter
+     * @param array $params
+     * @return FilterInterface
+     * @throws UnsupportedFilterException
+     */
+    protected function customFilters(string $field, string $filter, array $params): FilterInterface
+    {
+        throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
+    }
+
+    protected function canUseField(string $field): bool
     {
         $whiteApprove = $this->listType == self::LIST_WHITE && in_array($field, $this->fields);
         $blackApprove = $this->listType == self::LIST_BLACK && !in_array($field, $this->fields);
@@ -231,7 +245,7 @@ class FilterSortPaginateFactory
      * @param $variable
      * @throws ParseException
      */
-    private function guardNotArray($variable)
+    protected function guardNotArray($variable)
     {
         if (!is_array($variable)) {
             throw new ParseException('Fail to parse field query string');

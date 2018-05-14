@@ -1,8 +1,10 @@
 PHP
 ```php
 [
-    'page' => 10,
-    'pageSize' => 50,
+    'paginate' => {
+		'number' => 10,
+		'size' => 50,
+    },
     'sort' => [
         'field_1' => Sort::SORT_DESC,
         'field_2' => Sort::SORT_ASC,
@@ -38,8 +40,10 @@ PHP
 JSON
 ```json
 {
-    "page": 10,
-    "pageSize": 50,
+    "paginate": {
+        "page": 10,
+        "pageSize": 50
+    },
     "sort": {
         "field_1": -1,
         "field_2": 1
