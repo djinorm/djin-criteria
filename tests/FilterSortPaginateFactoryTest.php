@@ -107,7 +107,7 @@ class FilterSortPaginateFactoryTest extends TestCase
 
     public function testCreateWhitelist()
     {
-        $sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
+        $sort = new Sort(['field_1' => Sort::SORT_DESC]);
         $filter = new OrFilter([
             new BetweenFilter('field_1', '2018-01-01', '2018-12-31'),
             new AndFilter([
@@ -125,7 +125,7 @@ class FilterSortPaginateFactoryTest extends TestCase
 
     public function testCreateBlacklist()
     {
-        $sort = new Sort(['field_1' => Sort::SORT_DESC, 'field_2' => Sort::SORT_ASC]);
+        $sort = new Sort(['field_2' => Sort::SORT_ASC]);
         $filter = new OrFilter([
             new AndFilter([
                 new CompareFilter('field_2', CompareFilter::GREAT_THAN, 500),

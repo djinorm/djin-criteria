@@ -77,7 +77,12 @@ class FilterSortPaginateFactory
         if ($this->data->has('sort')) {
             $sort = new Sort();
             foreach ($this->data->get('sort') as $sortBy => $sortDirection) {
-                $sort->add($sortBy, (int) $sortDirection);
+                if ($this->canUseField($sortBy)) {
+                    $sort->add($sortBy, (int) $sortDirection);
+                }
+            }
+            if (empty($sort->get())) {
+                $sort = null;
             }
         } else {
             $sort = null;
@@ -107,9 +112,7 @@ class FilterSortPaginateFactory
                 case '$and':
                     return $this->operationFilter($conditions, AndFilter::class);
                 default:
-                    $whiteApprove = $this->listType == self::LIST_WHITE && in_array($fieldOrOperation, $this->fields);
-                    $blackApprove = $this->listType == self::LIST_BLACK && !in_array($fieldOrOperation, $this->fields);
-                    if (!$whiteApprove && !$blackApprove) {
+                    if (!$this->canUseField($fieldOrOperation)) {
                         return null;
                     }
                     return $this->parseField($fieldOrOperation, $conditions);
@@ -205,6 +208,13 @@ class FilterSortPaginateFactory
             default:
                 throw new UnsupportedFilterException("Filter «{$filter}» was not supported in this implemention");
         }
+    }
+
+    private function canUseField(string $field): bool
+    {
+        $whiteApprove = $this->listType == self::LIST_WHITE && in_array($field, $this->fields);
+        $blackApprove = $this->listType == self::LIST_BLACK && !in_array($field, $this->fields);
+        return $whiteApprove || $blackApprove;
     }
 
     /**
