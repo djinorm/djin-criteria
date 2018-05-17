@@ -149,7 +149,7 @@ class FilterSortPaginateFactory
         }
 
         if ($data->has('filters')) {
-            $filters = $this->parse($data->get('filters'));
+            $filters = $this->parse(['$and' => $data->get('filters', [])]);
         } else {
             $filters = null;
         }

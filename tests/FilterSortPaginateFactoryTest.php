@@ -144,7 +144,31 @@ class FilterSortPaginateFactoryTest extends TestCase
 
     public function testCreate()
     {
-        $this->assertEquals($this->fsp, $this->factory->create($this->array));
+        $this->assertEquals(
+            $this->fsp,
+            $this->factory->create($this->array)
+        );
+    }
+
+    public function testCreateFewConditionsWithoutAnd()
+    {
+        $array = [
+            'paginate' => [
+                'number' => 10,
+                'size' => 50
+            ],
+            'filters' => [
+                'field_1' => ['$equals' => 1],
+                'field_2' => ['$equals' => 2],
+            ],
+        ];
+
+        $expected = new FilterSortPaginate(new Paginate(10, 50), null, new AndFilter([
+            new EqualsFilter('field_1', 1),
+            new EqualsFilter('field_2', 2),
+        ]));
+
+        $this->assertEquals($expected, $this->factory->create($array));
     }
 
     public function testCreateWhitelist()
