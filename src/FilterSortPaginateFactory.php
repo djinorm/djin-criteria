@@ -121,19 +121,31 @@ class FilterSortPaginateFactory
         $this->listType = $listType;
         $this->listFields = $fields;
 
+        $paginate = $this->parsePaginate($data);
+        $sort = $this->parseSort($data);
+        $filters = $this->parseFilters($data);
+
+        return new FilterSortPaginate($paginate, $sort, $filters);
+    }
+
+    protected function parsePaginate(Dot $data): ?Paginate
+    {
         if ($data->has('paginate')) {
             if ($data->get('paginate')) {
-                $paginate = new Paginate(
+                return new Paginate(
                     $data->get('paginate.number', 1),
                     $data->get('paginate.size', $this->defaultPageSize)
                 );
             } else {
-                $paginate = null;
+                return null;
             }
-        } else {
-            $paginate = new Paginate(1, $this->defaultPageSize);
         }
+        return new Paginate(1, $this->defaultPageSize);
+    }
 
+    protected function parseSort(Dot $data): ?Sort
+    {
+        $sort = null;
         if ($data->has('sort')) {
             $sort = new Sort();
             foreach ($data->get('sort') as $sortBy => $sortDirection) {
@@ -144,90 +156,25 @@ class FilterSortPaginateFactory
             if (empty($sort->get())) {
                 $sort = null;
             }
-        } else {
-            $sort = null;
         }
-
-        if ($data->has('filters')) {
-            $filters = $this->parse(['$and' => $data->get('filters', [])]);
-        } else {
-            $filters = null;
-        }
-
-        return new FilterSortPaginate($paginate, $sort, $filters);
+        return $sort;
     }
 
     /**
-     * @param array $filtersArray
-     * @return FilterInterface
-     * @throws UnsupportedFilterException
-     * @throws ParseException
-     */
-    protected function parse(array $filtersArray): ?FilterInterface
-    {
-        foreach ($filtersArray as $fieldOrOperation => $conditions) {
-            switch ($fieldOrOperation) {
-                case '$or':
-                    return $this->operationFilter($conditions, OrFilter::class);
-                case '$and':
-                    return $this->operationFilter($conditions, AndFilter::class);
-                default:
-                    if (!$this->canUseField($fieldOrOperation)) {
-                        return null;
-                    }
-                    return $this->parseField($fieldOrOperation, $conditions);
-            }
-        }
-
-        throw new ParseException('Fail to parse Filter-Sort-Paginate query');
-    }
-
-    /**
-     * @param array $conditions
-     * @param $filterClass
+     * @param Dot $data
      * @return FilterInterface|null
      * @throws ParseException
      * @throws UnsupportedFilterException
      */
-    protected function operationFilter(array $conditions, $filterClass): ?FilterInterface
+    protected function parseFilters(Dot $data): ?FilterInterface
     {
-        $filters = [];
-        $this->guardNotArray($conditions);
-        foreach ($conditions as $subFieldOrOperation => $condition) {
-            $filter = $this->parse([$subFieldOrOperation => $condition]);
-            if ($filter) {
-                $filters[] = $filter;
-            }
-        }
-
-        if (empty($filters)) {
+        if ($data->has('filters')) {
+            return $this->parse(['$and' => $data->get('filters', [])]);
+        } else {
             return null;
         }
-
-        if (count($filters) == 1) {
-            return reset($filters);
-        }
-
-        return new $filterClass($filters);
     }
 
-    /**
-     * @param string $field
-     * @param array $conditions
-     * @return FilterInterface
-     * @throws UnsupportedFilterException
-     */
-    protected function parseField(string $field, array $conditions): FilterInterface
-    {
-        $filters = [];
-        foreach ($conditions as $filter => $params) {
-            $filters[] = $this->createFilter($field, $filter, $params);
-        }
-        if (count($filters) == 1) {
-            return current($filters);
-        }
-        return new AndFilter($filters);
-    }
 
     /**
      * @param string $field
@@ -262,11 +209,70 @@ class FilterSortPaginateFactory
      * @param $variable
      * @throws ParseException
      */
-    protected function guardNotArray($variable)
+    private function guardNotArray($variable)
     {
         if (!is_array($variable)) {
             throw new ParseException('Fail to parse field query string');
         }
+    }
+
+    /**
+     * @param array $filtersArray
+     * @return FilterInterface
+     * @throws UnsupportedFilterException
+     * @throws ParseException
+     */
+    private function parse(array $filtersArray): ?FilterInterface
+    {
+        foreach ($filtersArray as $fieldOrOperation => $conditions) {
+            $filters = [];
+            if (in_array($fieldOrOperation, ['$or', '$and'])) {
+                $this->guardNotArray($conditions);
+
+                //Рекурсивный парсинг, если ключ $or или $and
+                foreach ($conditions as $subFieldOrOperation => $condition) {
+                    if ($filter = $this->parse([$subFieldOrOperation => $condition])) {
+                        $filters[] = $filter;
+                    }
+                }
+
+                if (empty($filters)) {
+                    return null;
+                }
+
+                //Если в $or или $and только один фильтр, то возвращаем сразу его
+                if (count($filters) == 1) {
+                    return reset($filters);
+                }
+
+                //Иначе оборачиваем фильтры в $or или $and
+                return $fieldOrOperation == '$and' ? new AndFilter($filters) : new OrFilter($filters);
+
+            } else {
+                //Если создаем фильтры для конкретного поля
+                $field = $fieldOrOperation;
+
+                //Проверяем, можно ли работать с этим полем в соответствии с черным или белым списком
+                if (!$this->canUseField($fieldOrOperation)) {
+                    return null;
+                }
+
+                //Для одного поля может быть заданно множество фильтров
+                foreach ($conditions as $filter => $params) {
+                    $filters[] = $this->createFilter($field, $filter, $params);
+                }
+
+                //Если задан только один фильтр, то возвращаем сразу его
+                if (count($filters) == 1) {
+                    return current($filters);
+                }
+
+                //Если несколько, то объединяем их через and
+                return new AndFilter($filters);
+            }
+        }
+
+        throw new ParseException('Fail to parse Filter-Sort-Paginate query');
     }
 
 }
